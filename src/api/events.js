@@ -1,5 +1,11 @@
 import apiClient from './client';
 
+// Fetch all public events (no auth required)
+export const fetchPublicEvents = async () => {
+  const response = await apiClient.get('/api/events/public');
+  return response.data;
+};
+
 // Fetch all events
 export const fetchAllEvents = async () => {
   const response = await apiClient.get('/api/events');

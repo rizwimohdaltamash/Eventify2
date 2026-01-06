@@ -6,6 +6,12 @@ export const fetchAllAttendees = async () => {
   return response.data;
 };
 
+// Book an event
+export const bookEvent = async (bookingData) => {
+  const response = await apiClient.post('/api/attendees/book', bookingData);
+  return response.data;
+};
+
 // Create a new attendee
 export const createAttendee = async (attendeeData) => {
   const response = await apiClient.post('/api/attendees', attendeeData);
@@ -21,5 +27,11 @@ export const updateAttendee = async ({ id, data }) => {
 // Delete an attendee
 export const deleteAttendee = async (id) => {
   const response = await apiClient.delete(`/api/attendees/${id}`);
+  return response.data;
+};
+
+// Cancel booking for logged-in user
+export const cancelBooking = async (eventId) => {
+  const response = await apiClient.delete(`/api/attendees/cancel/${eventId}`);
   return response.data;
 };

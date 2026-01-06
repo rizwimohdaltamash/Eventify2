@@ -10,14 +10,15 @@
 ![TailwindCSS](https://img.shields.io/badge/TAILWIND-3.x-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)
 ![TanStack Query](https://img.shields.io/badge/TANSTACK_QUERY-5.x-FF4154?style=for-the-badge&logo=react-query&logoColor=white)
 ![Vite](https://img.shields.io/badge/VITE-Latest-646CFF?style=for-the-badge&logo=vite&logoColor=white)
+![JWT](https://img.shields.io/badge/JWT-Authentication-000000?style=for-the-badge&logo=jsonwebtokens&logoColor=white)
 
 </div>
 
 ---
 
-### A modern, full-stack event management platform with beautiful UI, real-time updates, and optimistic UI patterns.
+### A modern, full-stack event management platform with JWT authentication, role-based access control, beautiful UI, real-time updates, and optimistic UI patterns.
 
-Eventify streamlines event organization with comprehensive CRUD operations, automatic capacity validation, cascade delete functionality, and a polished user experience powered by React, Node.js, Express, Prisma, and MongoDB. Features optimistic UI updates for instant feedback, client-side form validation using Zod schemas, beautiful toast notifications with color-coded states, and a responsive gradient design built with TailwindCSS and Shadcn/UI components.
+Eventify is a complete event booking platform where users can browse and book events while administrators manage all aspects of the system. Features include JWT-based authentication, role-based authorization (admin/user), public event listings, booking management with capacity tracking, cancel functionality, and a polished user experience powered by React, Node.js, Express, Prisma, and MongoDB.
 
 ---
 
@@ -43,6 +44,8 @@ Eventify streamlines event organization with comprehensive CRUD operations, auto
 | **Express** | 5.x | Web framework |
 | **Prisma** | 6.x | ORM & Database toolkit |
 | **MongoDB** | Latest | NoSQL database |
+| **JWT** | Latest | Authentication tokens |
+| **bcryptjs** | Latest | Password hashing |
 | **CORS** | Latest | Cross-origin resource sharing |
 | **Dotenv** | Latest | Environment variables |
 
@@ -204,24 +207,42 @@ backend/
 
 ## ✨ Key Features
 
-### 🎯 Core Features
-- ✅ **Event Management**: Create, read, update, delete events
-- ✅ **Attendee Management**: Register, edit, remove attendees
-- ✅ **Capacity Control**: Prevent overbooking with automatic validation
-- ✅ **Cascade Delete**: Removing event deletes all attendees
+### 🔐 Authentication & Authorization
+- ✅ **JWT Authentication**: Secure token-based authentication
+- ✅ **Role-Based Access Control**: Admin vs User permissions
+- ✅ **Protected Routes**: Admin-only dashboard access
+- ✅ **Auto-Admin Assignment**: First user becomes admin
+- ✅ **Persistent Sessions**: LocalStorage token management
+- ✅ **Secure Passwords**: bcrypt hashing for all passwords
+
+### 🎯 User Features
+- ✅ **Public Event Browsing**: View all events without login
+- ✅ **Event Booking**: Book events with one click
+- ✅ **Booking Management**: Cancel bookings anytime
+- ✅ **Capacity Tracking**: Real-time available slots display
+- ✅ **Booking Status**: Visual indicators for booked events
+- ✅ **User Profile**: Display name and role in navbar
+
+### 👨‍💼 Admin Features
+- ✅ **Event Management**: Full CRUD operations on events
+- ✅ **Attendee Management**: View all users who booked events
+- ✅ **Admin Dashboard**: Dedicated management interface
+- ✅ **Capacity Control**: Set and manage event capacity
+- ✅ **Cascade Delete**: Remove events with all bookings
 
 ### 🚀 Advanced Features
 - ✅ **Optimistic UI Updates**: Instant feedback on all actions
 - ✅ **Smart Rollback**: Auto-revert on API failures
 - ✅ **Form Validation**: Client-side validation with Zod
-- ✅ **Toast Notifications**: Success/error feedback with color coding
+- ✅ **Toast Notifications**: Success/error feedback
 - ✅ **Loading States**: Skeleton loaders & spinner states
 - ✅ **Empty States**: Beautiful placeholders for empty data
 - ✅ **Responsive Design**: Mobile-first, works on all devices
-- ✅ **Confirmation Dialogs**: Beautiful modals for destructive actions
+- ✅ **Confirmation Dialogs**: Modals for critical actions
 
 ### 🎨 UI/UX Features
-- ✅ **Gradient Design**: Modern gradient backgrounds
+- ✅ **Modern Navbar**: Sticky navigation with gradient background
+- ✅ **Conditional UI**: Different views for admin vs users
 - ✅ **Hover Effects**: Interactive shadows & transitions
 - ✅ **Grid Layout**: Responsive card-based layout
 - ✅ **Icon System**: Lucide icons throughout
@@ -237,6 +258,7 @@ backend/
 - MongoDB Atlas account (or local MongoDB)
 - npm or yarn package manager
 
+JWT_SECRET="your-super-secret-jwt-key-change-this-in-production"
 ### Backend Setup
 
 1. **Navigate to backend folder:**
@@ -296,6 +318,29 @@ Frontend should now be running on `http://localhost:5173`
 ---
 
 ## 🗄️ Database Schema
+User Model
+```prisma
+model User {
+  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  email     String    @unique
+  role      String    @default("user")  // "admin" or "user"
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  account   Account?
+  attendees Attendee[]
+}
+```
+
+### Account Model (Password Storage)
+```prisma
+model Account {
+  id       String @id @default(auto()) @map("_id") @db.ObjectId
+  userId   String @unique @db.ObjectId
+  password String
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+```
 
 ### Event Model
 ```prisma
@@ -307,22 +352,37 @@ model Event {
   date        DateTime
   capacity    Int
   createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-  attendees   Attendee[]
-}
-```
+  upAuthentication API (`/api/auth`)
 
-### Attendee Model
-```prisma
-model Attendee {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  name      String
-  email     String
-  eventId   String   @db.ObjectId
-  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+| Method | Endpoint | Description | Request Body |
+|--------|----------|-------------|--------------|
+| POST | `/api/auth/register` | Register new user | `{ name, email, password }` |
+| POST | `/api/auth/login` | Login user | `{ email, password }` |
+| GET | `/api/auth/me` | Get current user | - (requires JWT) |
 
+### Events API (`/api/events`)
+
+| Method | Endpoint | Description | Request Body | Auth Required |
+|--------|----------|-------------|--------------|---------------|
+| GET | `/api/events` | Get all events (admin) | - | Yes (Admin) |
+| GET | `/api/events/public` | Get public events | - | No |
+| GET | `/api/events/:id` | Get event by ID | - | Yes (Admin) |
+| POST | `/api/events` | Create new event | `{ title, description, location, date, capacity }` | Yes (Admin) |
+| PUT | `/api/events/:id` | Update event | `{ title, description, location, date, capacity }` | Yes (Admin) |
+| DELETE | `/api/events/:id` | Delete event | - | Yes (Admin) |
+
+### Attendees API (`/api/attendees`)
+
+| Method | Endpoint | Description | Request Body | Auth Required |
+|--------|----------|-------------|--------------|---------------|
+| GET | `/api/attendees/:eventId` | Get attendees for event | - | Yes (Admin) |
+| POST | `/api/attendees` | Add attendee (admin) | `{ name, email, eventId }` | Yes (Admin) |
+| POST | `/api/attendees/book` | Book event (user) | `{ eventId }` | Yes (User) |
+| PUT | `/api/attendees/:id` | Update attendee | `{ name, email }` | Yes (Admin) |
+| DELETE | `/api/attendees/:id` | Remove attendee | - | Yes (Admin) |
+| DELETE | `/api/attendees/cancel/:eventId` | Cancel booking | - | Yes (User)
+  @@index([eventId])
+  @@index([user
   @@index([eventId])
 }
 ```
@@ -448,16 +508,21 @@ model Attendee {
 ✅ Form validation before submission  
 ✅ Loading & empty states  
 ✅ Responsive design patterns  
-
-### Backend
-✅ RESTful API design  
-✅ Error handling middleware  
-✅ CORS configuration  
-✅ Environment variables  
-✅ Database indexing  
-✅ Cascade delete relationships  
-
-### Code Quality
+x] User authentication & authorization ✅ **COMPLETED**
+- [x] Role-based access control ✅ **COMPLETED**
+- [x] Event booking system ✅ **COMPLETED**
+- [ ] Event search & filtering
+- [ ] Email notifications for attendees
+- [ ] Event categories & tags
+- [ ] Calendar view integration
+- [ ] Export attendees to CSV
+- [ ] Event dashboard analytics
+- [ ] Multi-language support
+- [ ] Dark mode toggle
+- [ ] Real-time updates with WebSockets
+- [ ] Social media integration
+- [ ] QR code tickets
+- [ ] Payment integration
 ✅ ESLint configuration  
 ✅ Consistent naming conventions  
 ✅ Component-level documentation  
@@ -515,3 +580,5 @@ Built with ❤️ by **Mohd. Altamash Rizwi**
 
 **Made with React, Node.js, and lots of ☕**
 #
+#   E v e n t i f y 2  
+ 

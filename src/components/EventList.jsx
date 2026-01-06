@@ -134,7 +134,7 @@ export default function EventList({ events, onEditEvent }) {
             <Button
               variant="default"
               className="w-full mt-auto bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
-              onClick={() => navigate(`/events/${event.id}/attendees`)}
+              onClick={() => navigate(`/admin/events/${event.id}/attendees`)}
             >
               <Users className="h-4 w-4 mr-2" />
               {event.attendees && event.attendees.length > 0
