@@ -580,5 +580,4 @@ Built with ❤️ by **Mohd. Altamash Rizwi**
 
 **Made with React, Node.js, and lots of ☕**
 #
-#   E v e n t i f y 2  
- 
+#
