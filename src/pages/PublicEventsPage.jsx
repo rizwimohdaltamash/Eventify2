@@ -236,19 +236,19 @@ export default function PublicEventsPage() {
                     </Button>
                   </div>
                 ) : isAuthenticated && event.userHasBooked ? (
-                  // User has booked - Show cancel option
-                  <div className="space-y-2">
-                    <div className="bg-blue-50 border border-blue-200 rounded-md px-3 py-2">
-                      <span className="text-sm font-medium text-blue-700">✓ You've booked this event</span>
+                  // User has booked - Show cancel option (side by side)
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 bg-blue-50 border border-blue-200 rounded-md px-3 py-2">
+                      <span className="text-sm font-medium text-blue-700">✓ Booked</span>
                     </div>
                     <Button
                       variant="destructive"
                       onClick={() => handleCancelBooking(event.id)}
                       disabled={cancelMutation.isPending}
-                      className="w-full"
+                      className="flex-1"
                     >
                       <XCircle className="h-4 w-4 mr-2" />
-                      Cancel Booking
+                      Cancel
                     </Button>
                   </div>
                 ) : (
